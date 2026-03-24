@@ -1,8 +1,8 @@
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.db import models
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name='profile')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='profile')
 
     patronymic = models.CharField(max_length=100,blank=True,null=True,verbose_name="Отчество")
 
@@ -29,4 +29,4 @@ class UserProfile(models.Model):
         ordering=['-created_at']
 
     def __str__(self):
-        return self.user.get_full_name()
+        return self.user.get_full_name() or self.user.username
