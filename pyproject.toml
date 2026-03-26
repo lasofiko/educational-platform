@@ -5,8 +5,10 @@ description = "Neetcode-style learning platform for EGE exam preparation"
 requires-python = ">=3.12"
 dependencies = [
     "django>=5.1,<6.0",
+    "django-cors-headers>=4.9.0",
     "django-filter>=25.2",
     "django-split-settings>=1.3.2",
     "djangorestframework>=3.17.0",
+    "djangorestframework-simplejwt>=5.5.1",
     "psycopg[binary]>=3.3.3",
 ]
