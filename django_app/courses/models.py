@@ -1,7 +1,5 @@
 from django.db import models
 
-# Create your models here.
-
 
 class Subject(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Название предмета")
@@ -17,9 +15,65 @@ class Subject(models.Model):
         return self.name
 
 
+class RoadmapNode(models.Model):
+    STATUS_CHOICES = [
+        ("locked", "Заблокировано"),
+        ("unlocked", "Доступно"),
+        ("completed", "Пройдено"),
+    ]
+    NODE_TYPE_CHOICES = [
+        ("section", "Раздел"),
+        ("task_group", "Группа заданий"),
+        ("task", "Конкретное задание"),
+    ]
+
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name="nodes",
+        verbose_name="Предмет",
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="children",
+        verbose_name="Родительская тема",
+    )
+    title = models.CharField(max_length=300, verbose_name="Название")
+    task_number = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name="Номер задания"
+    )
+    description = models.TextField(blank=True, verbose_name="Описание")
+    node_type = models.CharField(
+        max_length=20,
+        choices=NODE_TYPE_CHOICES,
+        default="section",
+        verbose_name="Тип узла",
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Порядок")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="locked",
+        verbose_name="Статус",
+    )
+
+    class Meta:
+        verbose_name = "Тема"
+        verbose_name_plural = "Темы"
+        ordering = ["order"]
+
+    def __str__(self):
+        if self.task_number:
+            return f"Задание {self.task_number}: {self.title}"
+        return self.title
+
+
 class Lesson(models.Model):
     node = models.ForeignKey(
-        "courses.RoadmapNode",
+        RoadmapNode,
         on_delete=models.CASCADE,
         related_name="lessons",
         verbose_name="Тема",
