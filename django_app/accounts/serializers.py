@@ -15,18 +15,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ('id', 'user', 'grade', 'phone')
+        fields = ('id', 'user', 'grade', 'target_score')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
-    grade = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    phone = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    grade = serializers.IntegerField(write_only=True, required=False)
+    target_score = serializers.IntegerField(write_only=True, required=False)
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'password', 'password2', 'grade', 'phone')
+        fields = ('username', 'email', 'first_name', 'last_name', 'password', 'password2', 'grade', 'target_score')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -35,13 +35,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         grade = validated_data.pop('grade', None)
-        phone = validated_data.pop('phone', None)
+        target_score = validated_data.pop('target_score', None)
         validated_data.pop('password2')
         user = User.objects.create_user(**validated_data)
         if grade:
             user.profile.grade = grade
-        if phone:
-            user.profile.phone = phone
+        if target_score:
+            user.profile.target_score = target_score
         user.profile.save()
         return user
 
