@@ -44,7 +44,7 @@ class RegisterView(generics.CreateAPIView):
             },
             'profile': {
                 'grade': user.profile.grade,
-                'phone': user.profile.phone,
+                'target_score': user.profile.target_score,
             },
             'refresh': str(refresh),
             'access': str(refresh.access_token),
@@ -72,7 +72,7 @@ class LoginView(APIView):
                 },
                 'profile': {
                     'grade': user.profile.grade,
-                    'phone': user.profile.phone,
+                    'target_score': user.profile.target_score,
                 }
             })
         return Response({'error': 'Неверные учетные данные'}, status=status.HTTP_401_UNAUTHORIZED)
