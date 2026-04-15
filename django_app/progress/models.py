@@ -11,10 +11,10 @@ class Enrollment(models.Model):
     enrolled_at=models.DateTimeField(auto_now_add=True,verbose_name="Дата поступления")
 
     class Meta:
-        UniqueConstraint(fields=['user','subject'],name='unique_user_subject')
-
+        constraints=[
+            UniqueConstraint(fields=['user','subject'],name='unique_user_subject'),
+        ]
         verbose_name='Запись на курс'
-
         verbose_name_plural='Записи на курсы'
 
 class UserProgress(models.Model):
@@ -37,7 +37,9 @@ class UserProgress(models.Model):
     updated_at=models.DateTimeField(auto_now=True,verbose_name="Дата обновления")
 
     class Meta:
-        UniqueConstraint(fields=['user','node'],name='unique_user_node')
+        constraints=[
+            UniqueConstraint(fields=['user','node'],name='unique_user_node'),
+        ]
 
 
 
