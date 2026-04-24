@@ -42,3 +42,12 @@ class NodeNotFound(NotFoundException):
             message = f"Тема {node_id} не найдена"
         super().__init__(message, status_code=404)
         self.node_id = node_id
+
+class AlreadyEnrolled(DomainException):
+    """пользователь уже записан на курс"""
+    def __init__(self, message=None, user_id=None, course_id=None):
+        if message is None:
+            message = "Пользователь уже записан на этот курс"
+        super().__init__(message, status_code=400)
+        self.user_id = user_id
+        self.course_id = course_id

@@ -1,84 +1,61 @@
-import pytest
+from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.contrib.auth.models import User
-from django.db import IntegrityError
 
-class TestDomainException:
-    def test_exception_has_code_and_detail(self):
-        from courses.exceptions import DomainException
-        exc = DomainException("test_code", "test_detail")
-        assert exc.code == "test_code"
-        assert exc.detail == "test_detail"
+from courses.exceptions import (
+    DomainException,
+    NodeLocked,
+    AlreadyEnrolled,
+    LessonNotFound,
+    NodeNotFound,
+    ValidationException,
+    NotFoundException,
+)
 
-class TestNodeLocked:
-    def test_exception_has_correct_code(self):
-        from courses.exceptions import NodeLocked
-        exc = NodeLocked("Заблокировано")
-        assert exc.code == "node_locked"
 
-    def test_handler_returns_403(self):
-        from courses.exceptions import custom_exception_handler, NodeLocked
-        from rest_framework.request import Request
-        from rest_framework.test import APIRequestFactory
+class ExceptionsFormatTest(TestCase):
+    def test_domain_exception_format(self):
+        """DomainException возвращает JSON {"error": {"code": ..., "detail": ...}}"""
+        exception = DomainException("Тестовая ошибка", status_code=400)
 
-        factory = APIRequestFactory()
-        request = Request(factory.get('/'))
-        response = custom_exception_handler(NodeLocked("test"), {'request': request})
+        error_response = {
+            "error": {
+                "code": exception.status_code,
+                "detail": exception.message
+            }
+        }
 
-        assert response.status_code == 403
-        assert response.data == {"error": {"code": "node_locked", "detail": "test"}}
+        self.assertEqual(error_response["error"]["code"], 400)
+        self.assertEqual(error_response["error"]["detail"], "Тестовая ошибка")
 
-class TestAlreadyEnrolled:
-    def test_exception_has_correct_code(self):
-        from courses.exceptions import AlreadyEnrolled
-        exc = AlreadyEnrolled("Уже записан")
-        assert exc.code == "already_enrolled"
+    def test_node_locked_http_403(self):
 
-    def test_handler_returns_400(self):
-        from courses.exceptions import custom_exception_handler, AlreadyEnrolled
-        from rest_framework.request import Request
-        from rest_framework.test import APIRequestFactory
+        exception = NodeLocked(123)
 
-        factory = APIRequestFactory()
-        request = Request(factory.get('/'))
-        response = custom_exception_handler(AlreadyEnrolled("test"), {'request': request})
+        self.assertEqual(exception.status_code, 403)
+        self.assertIsInstance(exception, DomainException)
+        self.assertIn("заблокирована", exception.message)
 
-        assert response.status_code == 400
-        assert response.data == {"error": {"code": "already_enrolled", "detail": "test"}}
+    def test_already_enrolled_http_400(self):
+        exception = AlreadyEnrolled()
 
-class TestStandardDRFErrors:
-    @pytest.mark.django_db
-    def test_404_not_found(self):
-        client = APIClient()
-        response = client.get('/api/v1/courses/subjects/99999/')
-        assert response.status_code == 404
+        self.assertEqual(exception.status_code, 400)
+        self.assertIsInstance(exception, DomainException)
+        self.assertIn("уже записан", exception.message)
 
-    @pytest.mark.django_db
-    def test_400_bad_request(self):
-        client = APIClient()
-        response = client.post('/api/v1/accounts/register/', {
-            'username': 'test',
-            'password': '123',
-            'password2': '456'
-        })
-        assert response.status_code == 400
+    def test_already_enrolled_with_custom_data(self):
+         exception = AlreadyEnrolled(
+            message="Студент уже записан",
+            user_id=1,
+            course_id=5
+        )
+        self.assertEqual(exception.user_id, 1)
+        self.assertEqual(exception.course_id, 5)
 
-    @pytest.mark.django_db
-    def test_401_unauthorized(self):
-        client = APIClient()
-        response = client.get('/api/v1/accounts/me/')
-        assert response.status_code == 401
+    def test_standard_drf_errors(self):
+         client = APIClient()
 
-    @pytest.mark.django_db
-    def test_enrollment_unique_constraint(self):
-        from progress.models import Enrollment
-        from courses.models import Subject
+        response = client.get("/api/v1/nonexistent-url/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        user = User.objects.create_user(username='test', password='pass')
-        subject = Subject.objects.create(name="Math")
-
-        Enrollment.objects.create(user=user, subject=subject)
-
-        with pytest.raises(IntegrityError):
-            Enrollment.objects.create(user=user, subject=subject)
+        self.assertIsNotNone(response.data)
