@@ -12,18 +12,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_filters",
     # Local apps
+    "common",
     "courses",
     "accounts",
     "progress",
 ]
-
-
-
-INSTALLED_APPS += [
-    'django_app.common',
-]
-
-
-REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'django_app.common.exception_handler.common_exception_handler',
-}

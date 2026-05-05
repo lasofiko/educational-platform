@@ -2,14 +2,14 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from django_app.courses.models import Subject, RoadmapNode
-from django_app.progress.models import UserProgress
-from django_app.courses.services.roadmap_svc import (
+from courses.models import Subject, RoadmapNode
+from progress.models import UserProgress
+from courses.services.roadmap_svc import (
     get_tree,
     get_node_with_status,
     unlock_next_node
 )
-from django_app.courses.exceptions import NodeLocked, NodeNotFound
+from courses.exceptions import NodeLocked, NodeNotFound
 
 
 class RoadmapServiceTests(TestCase):

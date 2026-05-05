@@ -1,7 +1,7 @@
 from django.db.models import Prefetch
-from django_app.courses.models import Lesson, Problem, RoadmapNode
-from django_app.progress.models import UserProgress
-from django_app.courses.exceptions import LessonNotFound, NodeLocked
+from courses.models import Lesson, Problem, RoadmapNode
+from progress.models import UserProgress
+from courses.exceptions import LessonNotFound, NodeLocked
 
 
 class LessonService:
