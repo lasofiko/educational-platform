@@ -26,3 +26,8 @@ dev = [
     "black>=24.0",
     "flake8>=7.0",
 ]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["django_app"]
+python_files = ["test_*.py"]

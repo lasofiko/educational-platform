@@ -1,9 +1,9 @@
 from django.db import transaction
 from django.db.models import Prefetch
 from django.core.cache import cache
-from django_app.courses.models import RoadmapNode, Subject
-from django_app.progress.models import UserProgress
-from django_app.courses.exceptions import NodeLocked, NodeNotFound
+from courses.models import RoadmapNode, Subject
+from progress.models import UserProgress
+from courses.exceptions import NodeLocked, NodeNotFound
 from django.contrib.auth.models import User
 
 class RoadmapService:
@@ -100,6 +100,7 @@ class RoadmapService:
 
         if score_percentage is not None and score_percentage < RoadmapService.unlock:
             progress.status = 'in_progress'
+            progress.score = int(score_percentage)
             progress.save()
             return None
         progress.status = 'complete'
