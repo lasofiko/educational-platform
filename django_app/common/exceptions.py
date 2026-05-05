@@ -1,8 +1,11 @@
-class DomainExceptions(Exception):
-    default_detail="ошибка"
-    default_code="error"
-    status_code=400
+class DomainException(Exception):
+    """базовое доменное исключение"""
+    status_code = 400
+    default_code = 'error'
 
-    def __init__(self,detail=None,code=None):
-        self.detail=detail or self.default_detail
-        self.code=code or self.default_code
+    def __init__(self, message=None, status_code=None, code=None):
+        self.message = message or self.__class__.__doc__ or 'ошибка'
+        if status_code is not None:
+            self.status_code = status_code
+        self.code = code or self.default_code
+        super().__init__(self.message)
