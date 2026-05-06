@@ -47,25 +47,17 @@ class RoadmapViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(node, context={'request': request})
         return Response(serializer.data)
 
-    # прогресс пользователя по конкретной теме
     @action(detail=True, methods=['get'], url_path='progress')
     def progress(self, request, pk=None):
         if not request.user.is_authenticated:
             return Response({'error': 'Требуется авторизация'}, status=401)
 
-        progress = roadmap_svc.get_node_progress(pk, request.user)
-        if progress:
-            return Response({
-                'node_id': pk,
-                'status': progress.status,
-                'score': progress.score,
-                'completed_at': progress.completed_at
-            })
+        node = roadmap_svc.get_node_with_status(pk, request.user)
         return Response({
             'node_id': pk,
-            'status': 'locked',
-            'score': 0,
-            'completed_at': None
+            'status': node['user_status'],
+            'score': node['user_score'],
+            'completed_at': node['user_completed_at'],
         })
 
 class LessonViewSet(viewsets.GenericViewSet):
@@ -73,9 +65,8 @@ class LessonViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.AllowAny]
     serializer_class = LessonSerializer
 
-    # урок со всеми задачами
     def retrieve(self, request, pk=None):
-        lesson = lesson_svc.get_lesson_with_problems(pk)
+        lesson = lesson_svc.get_lesson_with_problems(pk, request.user)
         if lesson is None:
             return Response({'error': 'Урок не найден'}, status=404)
         serializer = self.get_serializer(lesson)
@@ -84,7 +75,7 @@ class LessonViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['get'], url_path='by-node/(?P<node_id>[^/.]+)')
     def by_node(self, request, node_id=None):
 
-        lessons = lesson_svc.get_lessons_by_node(node_id)
+        lessons = lesson_svc.get_lessons_for_node(node_id)
         serializer = self.get_serializer(lessons, many=True)
         return Response(serializer.data)
 
