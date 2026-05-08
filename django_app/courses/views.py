@@ -90,4 +90,4 @@ class QuizViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = QuizSerializer
 
     def get_queryset(self):
-        return Quiz.objects.prefetch_related('questions').all()
+        return Quiz.objects.prefetch_related('questions').order_by('id')

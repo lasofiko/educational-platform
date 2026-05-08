@@ -206,6 +206,27 @@ def test_problems_filter_by_lesson(api_client, lesson):
 
 
 @pytest.mark.django_db
+def test_problems_filter_combined_lesson_and_difficulty(api_client, lesson):
+    Problem.objects.create(
+        lesson=lesson,
+        title='Задача medium',
+        answer='9',
+        difficulty='medium',
+        points=1,
+        order=2,
+    )
+    response = api_client.get(
+        f'/api/v1/courses/problems/?lesson={lesson.id}&difficulty=easy'
+    )
+    assert response.status_code == 200
+    rows = _payload_rows(response)
+    assert len(rows) >= 1
+    for row in rows:
+        assert row['lesson'] == lesson.id
+        assert row['difficulty'] == 'easy'
+
+
+@pytest.mark.django_db
 def test_problems_list_excludes_answer_and_solution(api_client, lesson):
     response = api_client.get('/api/v1/courses/problems/')
     assert response.status_code == 200
@@ -223,6 +244,18 @@ def test_problem_retrieve_includes_answer_and_solution(api_client, lesson):
     assert response.status_code == 200
     assert response.data['answer'] == '42'
     assert 'solution' in response.data
+    assert response.data['solution'] == ''
+
+
+@pytest.mark.django_db
+def test_problem_retrieve_solution_when_set(api_client, lesson):
+    problem = lesson.problems.first()
+    problem.solution = 'Подробное решение'
+    problem.save(update_fields=['solution'])
+    response = api_client.get(f'/api/v1/courses/problems/{problem.id}/')
+    assert response.status_code == 200
+    assert response.data['solution'] == 'Подробное решение'
+    assert response.data['answer'] == '42'
 
 
 @pytest.mark.django_db
@@ -241,3 +274,14 @@ def test_quizzes_list_excludes_question_answers(api_client, quiz):
     quiz_row = next(row for row in _payload_rows(response) if row['id'] == quiz.id)
     for question in quiz_row['questions']:
         assert 'answer' not in question
+
+
+@pytest.mark.django_db
+def test_quiz_retrieve_has_questions_without_answers(api_client, quiz):
+    response = api_client.get(f'/api/v1/courses/quizzes/{quiz.id}/')
+    assert response.status_code == 200
+    assert response.data['id'] == quiz.id
+    assert len(response.data['questions']) == quiz.questions.count()
+    for question in response.data['questions']:
+        assert 'answer' not in question
+        assert 'text' in question
