@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 
-from courses.models import Problem
+from courses.models import Lesson, Problem
 
 
 def _payload_rows(response):
@@ -124,6 +124,33 @@ def test_roadmap_progress_authenticated_returns_status_score_completed_at(
 
 
 @pytest.mark.django_db
+def test_lesson_retrieve_ok_includes_node_and_problems(api_client, tree):
+    root1 = tree['root1']
+    lesson = Lesson.objects.create(node=root1, title='Урок (корень)', order=0)
+    Problem.objects.create(
+        lesson=lesson,
+        title='Задача А',
+        answer='42',
+        difficulty='easy',
+        points=2,
+        order=0,
+    )
+    response = api_client.get(f'/api/v1/courses/lessons/{lesson.id}/')
+    assert response.status_code == 200
+    data = response.data
+    assert data['id'] == lesson.id
+    assert data['title'] == 'Урок (корень)'
+    assert data['node']['id'] == root1.id
+    assert data['node']['title'] == root1.title
+    assert len(data['problems']) == 1
+    prob = data['problems'][0]
+    assert prob['title'] == 'Задача А'
+    assert prob['difficulty'] == 'easy'
+    assert prob['points'] == 2
+    assert 'answer' not in prob
+
+
+@pytest.mark.django_db
 def test_lesson_retrieve_locked_node_returns_403(api_client, lesson):
     response = api_client.get(f'/api/v1/courses/lessons/{lesson.id}/')
     assert response.status_code == 403
@@ -131,13 +158,23 @@ def test_lesson_retrieve_locked_node_returns_403(api_client, lesson):
 
 
 @pytest.mark.django_db
-def test_lessons_by_node(api_client, tree, lesson):
+def test_lesson_retrieve_not_found_returns_404(api_client):
+    response = api_client.get('/api/v1/courses/lessons/9999/')
+    assert response.status_code == 404
+    assert response.data['error']['code'] == 'lesson_not_found'
+
+
+@pytest.mark.django_db
+def test_lessons_by_node_returns_lessons_for_node(api_client, tree, lesson):
     response = api_client.get(
         f'/api/v1/courses/lessons/by-node/{tree["task11"].id}/'
     )
     assert response.status_code == 200
-    ids = [row['id'] for row in response.data]
-    assert lesson.id in ids
+    rows = response.data
+    assert isinstance(rows, list)
+    match = next(r for r in rows if r['id'] == lesson.id)
+    assert match['title'] == lesson.title
+    assert 'order' in match and 'created_at' in match
 
 
 @pytest.mark.django_db

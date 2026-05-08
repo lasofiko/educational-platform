@@ -63,10 +63,7 @@ class LessonViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, pk=None):
         lesson = lesson_svc.get_lesson_with_problems(pk, request.user)
-        if lesson is None:
-            return Response({'error': 'Урок не найден'}, status=404)
-        serializer = self.get_serializer(lesson)
-        return Response(serializer.data)
+        return Response(lesson)
 
     @action(detail=False, methods=['get'], url_path='by-node/(?P<node_id>[^/.]+)')
     def by_node(self, request, node_id=None):
