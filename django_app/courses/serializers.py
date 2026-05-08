@@ -45,9 +45,8 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        view = self.context.get('view')
-        if getattr(view, 'action', None) == 'list':
-            data.pop('answer', None)
+        # не отдаём правильные ответы ни в list, ни в retrieve квиза (courses API)
+        data.pop('answer', None)
         return data
 
 #сериализует тесты и подтягивает вопросы
