@@ -38,13 +38,10 @@ class RoadmapViewSet(viewsets.GenericViewSet):
         nodes = roadmap_svc.get_tree(subject_id=subject_id)
         return Response(nodes)
 
-    # детальная информация о теме с уроками
+    # детальная информация о теме (данные сервиса, в т.ч. user_status)
     def retrieve(self, request, pk=None):
         node = roadmap_svc.get_node_with_status(pk, user=request.user)
-        if node is None:
-            return Response({'error': 'Тема не найдена'}, status=404)
-        serializer = self.get_serializer(node, context={'request': request})
-        return Response(serializer.data)
+        return Response(node)
 
     @action(detail=True, methods=['get'], url_path='progress')
     def progress(self, request, pk=None):

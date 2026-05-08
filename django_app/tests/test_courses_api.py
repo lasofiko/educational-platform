@@ -11,6 +11,27 @@ def _payload_rows(response):
     return data
 
 
+def _assert_tree_nested_roots(nodes, subject_id):
+    assert isinstance(nodes, list)
+    for root in nodes:
+        assert root['parent_id'] is None
+        assert root['subject_id'] == subject_id
+        assert 'children' in root
+        assert isinstance(root['children'], list)
+        assert 'user_status' in root
+        _walk_tree_children(root['children'], parent_id=root['id'], subject_id=subject_id)
+
+
+def _walk_tree_children(children, parent_id, subject_id):
+    for node in children:
+        assert node['parent_id'] == parent_id
+        assert node['subject_id'] == subject_id
+        assert 'children' in node
+        assert isinstance(node['children'], list)
+        assert 'user_status' in node
+        _walk_tree_children(node['children'], parent_id=node['id'], subject_id=subject_id)
+
+
 @pytest.mark.django_db
 def test_subjects_list_returns_200_and_pagination(api_client, subject):
     response = api_client.get('/api/v1/courses/subjects/')
@@ -43,12 +64,25 @@ def test_subjects_list_allow_any_unauthenticated_not_401(subject):
 
 
 @pytest.mark.django_db
-def test_roadmap_list(api_client, subject, tree):
+def test_roadmap_list_nested_trees_roots_without_parent(api_client, subject, tree):
     assert tree['root1'].subject_id == subject.id
     response = api_client.get(f'/api/v1/courses/roadmap/?subject_id={subject.id}')
     assert response.status_code == 200
-    assert isinstance(response.data, list)
-    assert len(response.data) >= 1
+    data = response.data
+    assert isinstance(data, list)
+    assert len(data) == 2
+    root_ids = {n['id'] for n in data if n['parent_id'] is None}
+    assert root_ids == {tree['root1'].id, tree['root2'].id}
+    _assert_tree_nested_roots(data, subject.id)
+
+
+@pytest.mark.django_db
+def test_roadmap_retrieve_detail_includes_user_status(api_client, tree):
+    root_id = tree['root1'].id
+    response = api_client.get(f'/api/v1/courses/roadmap/{root_id}/')
+    assert response.status_code == 200
+    assert 'user_status' in response.data
+    assert response.data['id'] == root_id
 
 
 @pytest.mark.django_db
@@ -61,9 +95,32 @@ def test_roadmap_retrieve_locked_returns_403(api_client, tree):
 
 @pytest.mark.django_db
 def test_roadmap_retrieve_not_found_returns_404(api_client):
-    response = api_client.get('/api/v1/courses/roadmap/999999/')
+    response = api_client.get('/api/v1/courses/roadmap/9999/')
     assert response.status_code == 404
     assert response.data['error']['code'] == 'node_not_found'
+
+
+@pytest.mark.django_db
+def test_roadmap_progress_unauthenticated_returns_401(tree):
+    client = APIClient()
+    response = client.get(
+        f'/api/v1/courses/roadmap/{tree["root1"].id}/progress/'
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_roadmap_progress_authenticated_returns_status_score_completed_at(
+    api_client, tree
+):
+    node_id = tree['root1'].id
+    response = api_client.get(f'/api/v1/courses/roadmap/{node_id}/progress/')
+    assert response.status_code == 200
+    body = response.data
+    assert str(body['node_id']) == str(node_id)
+    assert 'status' in body
+    assert 'score' in body
+    assert 'completed_at' in body
 
 
 @pytest.mark.django_db
