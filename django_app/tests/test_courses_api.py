@@ -12,10 +12,14 @@ def _payload_rows(response):
 
 
 @pytest.mark.django_db
-def test_subjects_list(api_client, subject):
+def test_subjects_list_returns_200_and_pagination(api_client, subject):
     response = api_client.get('/api/v1/courses/subjects/')
     assert response.status_code == 200
-    rows = _payload_rows(response)
+    body = response.data
+    assert 'count' in body
+    assert 'results' in body
+    assert body['count'] >= 1
+    rows = body['results']
     assert len(rows) >= 1
     ids = [row['id'] for row in rows]
     assert subject.id in ids
@@ -26,6 +30,16 @@ def test_subjects_retrieve(api_client, subject):
     response = api_client.get(f'/api/v1/courses/subjects/{subject.id}/')
     assert response.status_code == 200
     assert response.data['id'] == subject.id
+
+
+@pytest.mark.django_db
+def test_subjects_list_allow_any_unauthenticated_not_401(subject):
+    client = APIClient()
+    response = client.get('/api/v1/courses/subjects/')
+    assert response.status_code == 200
+    assert 'results' in response.data
+    ids = [row['id'] for row in response.data['results']]
+    assert subject.id in ids
 
 
 @pytest.mark.django_db
