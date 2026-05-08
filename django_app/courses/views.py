@@ -36,8 +36,7 @@ class RoadmapViewSet(viewsets.GenericViewSet):
     def list(self, request):
         subject_id = request.query_params.get('subject_id')
         nodes = roadmap_svc.get_tree(subject_id=subject_id)
-        serializer = self.get_serializer(nodes, many=True, context={'request': request})
-        return Response(serializer.data)
+        return Response(nodes)
 
     # детальная информация о теме с уроками
     def retrieve(self, request, pk=None):
@@ -76,8 +75,7 @@ class LessonViewSet(viewsets.GenericViewSet):
     def by_node(self, request, node_id=None):
 
         lessons = lesson_svc.get_lessons_for_node(node_id)
-        serializer = self.get_serializer(lessons, many=True)
-        return Response(serializer.data)
+        return Response(lessons)
 
 class ProblemViewSet(viewsets.ReadOnlyModelViewSet):
 
