@@ -15,7 +15,8 @@ class ProblemSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if getattr(self, 'many', False):
+        view = self.context.get('view')
+        if getattr(view, 'action', None) == 'list':
             self.fields.pop('answer', None)
             self.fields.pop('solution', None)
 
@@ -42,10 +43,12 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
         model = QuizQuestion
         fields = '__all__'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if getattr(self, 'many', False):
-            self.fields.pop('answer', None)
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        view = self.context.get('view')
+        if getattr(view, 'action', None) == 'list':
+            data.pop('answer', None)
+        return data
 
 #сериализует тесты и подтягивает вопросы
 class QuizSerializer(serializers.ModelSerializer):
