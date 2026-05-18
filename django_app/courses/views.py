@@ -36,16 +36,12 @@ class RoadmapViewSet(viewsets.GenericViewSet):
     def list(self, request):
         subject_id = request.query_params.get('subject_id')
         nodes = roadmap_svc.get_tree(subject_id=subject_id)
-        serializer = self.get_serializer(nodes, many=True, context={'request': request})
-        return Response(serializer.data)
+        return Response(nodes)
 
-    # детальная информация о теме с уроками
+    # детальная информация о теме (данные сервиса, в т.ч. user_status)
     def retrieve(self, request, pk=None):
         node = roadmap_svc.get_node_with_status(pk, user=request.user)
-        if node is None:
-            return Response({'error': 'Тема не найдена'}, status=404)
-        serializer = self.get_serializer(node, context={'request': request})
-        return Response(serializer.data)
+        return Response(node)
 
     @action(detail=True, methods=['get'], url_path='progress')
     def progress(self, request, pk=None):
@@ -67,17 +63,13 @@ class LessonViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, pk=None):
         lesson = lesson_svc.get_lesson_with_problems(pk, request.user)
-        if lesson is None:
-            return Response({'error': 'Урок не найден'}, status=404)
-        serializer = self.get_serializer(lesson)
-        return Response(serializer.data)
+        return Response(lesson)
 
     @action(detail=False, methods=['get'], url_path='by-node/(?P<node_id>[^/.]+)')
     def by_node(self, request, node_id=None):
 
         lessons = lesson_svc.get_lessons_for_node(node_id)
-        serializer = self.get_serializer(lessons, many=True)
-        return Response(serializer.data)
+        return Response(lessons)
 
 class ProblemViewSet(viewsets.ReadOnlyModelViewSet):
 
@@ -98,4 +90,4 @@ class QuizViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = QuizSerializer
 
     def get_queryset(self):
-        return Quiz.objects.prefetch_related('questions').all()
+        return Quiz.objects.prefetch_related('questions').order_by('id')
