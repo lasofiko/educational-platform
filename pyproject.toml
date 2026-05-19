@@ -19,15 +19,28 @@ dependencies = [
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+include = []
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
     "pytest-django>=4.8",
     "black>=24.0",
     "flake8>=7.0",
+    "responses>=0.25",
+]
+ugc = [
+    "flask>=3.0",
+    "flask-sqlalchemy>=3.1",
+    "marshmallow>=3.22",
+    "PyJWT>=2.9",
+    "sqlalchemy>=2.0",
+    "requests>=2.32",
 ]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
-pythonpath = ["django_app"]
+pythonpath = ["django_app", "."]
 python_files = ["test_*.py"]
+testpaths = ["django_app/tests", "services/ugc/tests"]
