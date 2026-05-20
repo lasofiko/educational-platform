@@ -233,6 +233,7 @@ dependencies = [
     { name = "gunicorn" },
     { name = "pillow" },
     { name = "psycopg2-binary" },
+    { name = "requests" },
     { name = "split-settings" },
 ]
 
@@ -271,6 +272,7 @@ requires-dist = [
     { name = "pyjwt", marker = "extra == 'ugc'", specifier = ">=2.9" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.8" },
+    { name = "requests", specifier = ">=2.32" },
     { name = "requests", marker = "extra == 'ugc'", specifier = ">=2.32" },
     { name = "responses", marker = "extra == 'dev'", specifier = ">=0.25" },
     { name = "split-settings", specifier = ">=0.3" },
