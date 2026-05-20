@@ -27,6 +27,7 @@ include = []
 dev = [
     "pytest>=8.0",
     "pytest-django>=4.8",
+    "pytest-asyncio>=0.24",
     "black>=24.0",
     "flake8>=7.0",
     "responses>=0.25",
@@ -39,9 +40,18 @@ ugc = [
     "sqlalchemy>=2.0",
     "requests>=2.32",
 ]
+notifications = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20",
+    "httpx>=0.27",
+]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 pythonpath = ["django_app", "."]
 python_files = ["test_*.py"]
-testpaths = ["django_app/tests", "services/ugc/tests"]
+asyncio_mode = "auto"
+testpaths = ["django_app/tests", "services/ugc/tests", "services/notifications/tests"]
