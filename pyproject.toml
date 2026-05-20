@@ -13,6 +13,7 @@ dependencies = [
     "psycopg2-binary>=2.9",
     "pillow>=10.0",
     "split-settings>=0.3",
+    "requests>=2.32",
 ]
 
 [build-system]

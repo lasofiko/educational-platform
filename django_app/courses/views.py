@@ -14,6 +14,7 @@ from .serializers import (
 )
 from .filters import ProblemFilter, LessonFilter
 from .services import roadmap_svc, lesson_svc, subject_svc
+from .services.ugc_client import get_ugc_summary
 
 class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
 
@@ -63,6 +64,7 @@ class LessonViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, pk=None):
         lesson = lesson_svc.get_lesson_with_problems(pk, request.user)
+        lesson['ugc_summary'] = get_ugc_summary('lesson', pk)
         return Response(lesson)
 
     @action(detail=False, methods=['get'], url_path='by-node/(?P<node_id>[^/.]+)')

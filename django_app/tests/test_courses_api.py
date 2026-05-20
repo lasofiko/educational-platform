@@ -1,7 +1,10 @@
 import pytest
+import responses
 from rest_framework.test import APIClient
 
 from courses.models import Lesson, Problem
+
+UGC_TEST_BASE = 'http://ugc.test:8001'
 
 
 def _payload_rows(response):
@@ -285,3 +288,75 @@ def test_quiz_retrieve_has_questions_without_answers(api_client, quiz):
     for question in response.data['questions']:
         assert 'answer' not in question
         assert 'text' in question
+
+
+def _mock_ugc_summary(target_type, target_id, reviews, comments):
+    responses.add(
+        responses.GET,
+        f'{UGC_TEST_BASE}/api/v1/ugc/reviews',
+        json={'results': reviews},
+        match=[responses.matchers.query_param_matcher({
+            'target_type': target_type,
+            'target_id': str(target_id),
+        })],
+    )
+    responses.add(
+        responses.GET,
+        f'{UGC_TEST_BASE}/api/v1/ugc/comments',
+        json={'results': comments},
+        match=[responses.matchers.query_param_matcher({
+            'target_type': target_type,
+            'target_id': str(target_id),
+        })],
+    )
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_subject_retrieve_includes_ugc_summary_from_flask(api_client, subject, monkeypatch):
+    monkeypatch.setenv('UGC_BASE_URL', UGC_TEST_BASE)
+    _mock_ugc_summary(
+        'subject',
+        subject.id,
+        reviews=[{'rating': 5}, {'rating': 3}],
+        comments=[{'id': 1}, {'id': 2}, {'id': 3}],
+    )
+    response = api_client.get(f'/api/v1/courses/subjects/{subject.id}/')
+    assert response.status_code == 200
+    summary = response.data['ugc_summary']
+    assert summary['review_count'] == 2
+    assert summary['avg_rating'] == 4.0
+    assert summary['comment_count'] == 3
+
+
+@pytest.mark.django_db
+def test_subjects_list_excludes_ugc_summary(api_client, subject):
+    response = api_client.get('/api/v1/courses/subjects/')
+    assert response.status_code == 200
+    row = next(r for r in response.data['results'] if r['id'] == subject.id)
+    assert 'ugc_summary' not in row
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_lesson_retrieve_ugc_summary_when_flask_down(api_client, tree, monkeypatch):
+    monkeypatch.setenv('UGC_BASE_URL', UGC_TEST_BASE)
+    root1 = tree['root1']
+    lesson = Lesson.objects.create(node=root1, title='Урок UGC fallback', order=0)
+    responses.add(
+        responses.GET,
+        f'{UGC_TEST_BASE}/api/v1/ugc/reviews',
+        status=503,
+    )
+    responses.add(
+        responses.GET,
+        f'{UGC_TEST_BASE}/api/v1/ugc/comments',
+        status=503,
+    )
+    response = api_client.get(f'/api/v1/courses/lessons/{lesson.id}/')
+    assert response.status_code == 200
+    assert response.data['ugc_summary'] == {
+        'review_count': 0,
+        'avg_rating': None,
+        'comment_count': 0,
+    }
