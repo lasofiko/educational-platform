@@ -9,8 +9,7 @@ from courses.services.lesson_svc import (
 )
 from courses.exceptions import LessonNotFound, NodeLocked
 from progress.models import UserProgress
-
-
+#
 class TestGetLessonWithProblems(TestCase):
     """Тесты для get_lesson_with_problems(lesson_id, user)"""
 
