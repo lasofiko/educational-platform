@@ -40,3 +40,24 @@ async def test_create_notification_invalid_returns_422(client):
     assert 'user_id' in loc_fields
     assert 'title' in loc_fields
     assert 'body' in loc_fields
+
+@pytest.mark.asyncio
+async def test_handle_node_unlocked_success(client):
+    response = await client.post(
+        '/api/v1/notifications/node-unlocked',
+        json={
+            'user_id': 1,
+            'node_id': 4,
+            'node_title': "Алгебра"
+        },
+    )
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data['id'] >= 1
+    assert data['user_id'] == 1
+    assert data['title'] == "Тема разблокирована"
+    assert data['status'] == "pending"
+    assert data['body'] == f"Вы открыли тему: «Алгебра»"
+    assert data['notification_type'] == "node_unlocked"
+    
