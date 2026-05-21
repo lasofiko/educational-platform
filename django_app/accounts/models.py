@@ -2,7 +2,29 @@ from django.conf import settings
 from django.db import models
 
 class UserProfile(models.Model):
+    ROLE_STUDENT = 'student'
+    ROLE_PARENT = 'parent'
+
+    ROLE_CHOICES = [
+        (ROLE_STUDENT, 'Ученик'),
+        (ROLE_PARENT, 'Родитель'),
+    ]
+
+    GRADE_CHOICES = [
+        (8, '8 класс'),
+        (9, '9 класс'),
+        (10, '10 класс'),
+        (11, '11 класс'),
+    ]
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='profile')
+
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default=ROLE_STUDENT,
+        verbose_name='роль',
+    )
 
     patronymic = models.CharField(max_length=100,blank=True,null=True,verbose_name="Отчество")
 
@@ -10,12 +32,12 @@ class UserProfile(models.Model):
 
     avatar=models.ImageField(upload_to="avatars/",blank=True,null=True,verbose_name="аватар")
 
-    GRADE_CHOICES = [
-    (10,"10 класс"),
-    (11,"11 класс"),
-    ]
-
-    grade=models.IntegerField(choices=GRADE_CHOICES,default=10,verbose_name="класс")
+    grade=models.IntegerField(
+        choices=GRADE_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="класс",
+    )
 
     target_score=models.IntegerField(null=True,blank=True,verbose_name="целевой балл ЕГЭ")
 
