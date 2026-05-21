@@ -377,9 +377,24 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('Заполняю базу данных'))
-        subject, created = Subject.objects.get_or_create(name="Математика (профиль)", defaults={"description": "Подготовка к ЕГЭ по математике профильного уровня"})
+        subject, created = Subject.objects.get_or_create(
+            name="Математика (профиль)",
+            defaults={"description": "Подготовка к ЕГЭ по математике профильного уровня", "icon": "math"},
+        )
         if created:
             self.stdout.write(self.style.SUCCESS(f'Создан предмет: {subject.name}'))
+
+        extra_subjects = [
+            ("Русский язык", "Подготовка к ЕГЭ по русскому языку", "russian"),
+            ("Информатика", "Подготовка к ЕГЭ по информатике", "informatics"),
+        ]
+        for name, description, icon in extra_subjects:
+            obj, was_created = Subject.objects.get_or_create(
+                name=name,
+                defaults={"description": description, "icon": icon},
+            )
+            if was_created:
+                self.stdout.write(self.style.SUCCESS(f'Создан предмет: {obj.name}'))
 
         stats = {'nodes': 0, 'lessons': 0, 'problems': 0}
         def create_nodes(parent, children_data, level=0):
