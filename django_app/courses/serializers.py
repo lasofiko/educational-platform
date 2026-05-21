@@ -1,11 +1,23 @@
 from rest_framework import serializers
 from .models import Subject, RoadmapNode, Lesson, Problem, Quiz, QuizQuestion
+from .services.ugc_client import get_ugc_summary
 
 # все поля модели
 class SubjectSerializer(serializers.ModelSerializer):
+    ugc_summary = serializers.SerializerMethodField()
+
     class Meta:
         model = Subject
         fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        view = self.context.get('view')
+        if getattr(view, 'action', None) != 'retrieve':
+            self.fields.pop('ugc_summary', None)
+
+    def get_ugc_summary(self, obj):
+        return get_ugc_summary('subject', obj.id)
 
 # сериализует задачу, но при запросе списка задач скрывает ответ и решение
 class ProblemSerializer(serializers.ModelSerializer):

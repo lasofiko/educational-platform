@@ -36,7 +36,7 @@ jobs:
         run: pip install uv
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --extra dev --extra ugc --extra notifications
 
       - name: Run migrations
         env:
@@ -54,4 +54,4 @@ jobs:
           DB_PASSWORD: postgres
           DB_HOST: localhost
           DB_PORT: 5432
-        run: uv run pytest django_app/tests/
+        run: uv run pytest django_app/tests/ services/ugc/tests/ services/notifications/tests/
