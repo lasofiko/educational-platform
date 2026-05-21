@@ -12,11 +12,9 @@ from progress.models import UserProgress
 #
 class TestGetLessonWithProblems(TestCase):
     """Тесты для get_lesson_with_problems(lesson_id, user)"""
-
     def setUp(self):
         # Создаем тестовые данные
         from courses.models import Subject, RoadmapNode, Lesson, Problem
-
         self.subject = Subject.objects.create(name="Тестовый предмет")
         self.user = User.objects.create_user(username="testuser", password="12345")
 

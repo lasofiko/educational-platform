@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 from marshmallow import ValidationError
 
-from services.ugc.ugc_config import Config, TestConfig
+from services.ugc.config import Config, TestConfig
 from services.ugc.models import db
 from services.ugc.common.exceptions import UGCException
 from services.ugc.blueprints import reviews_bp, comments_bp, moderation_bp
