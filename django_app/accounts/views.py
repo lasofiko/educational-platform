@@ -3,8 +3,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from .models import UserProfile
 from .serializers import UserProfileSerializer, RegisterSerializer, ChangePasswordSerializer
+from .services import get_or_create_profile, profile_payload
 
 
 class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
@@ -21,7 +23,8 @@ class CurrentUserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        serializer = UserProfileSerializer(request.user.profile)
+        profile = get_or_create_profile(request.user)
+        serializer = UserProfileSerializer(profile)
         return Response(serializer.data)
 
 
@@ -42,10 +45,7 @@ class RegisterView(generics.CreateAPIView):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
             },
-            'profile': {
-                'grade': user.profile.grade,
-                'target_score': user.profile.target_score,
-            },
+            'profile': profile_payload(user),
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
@@ -55,8 +55,20 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
+        login = (request.data.get('username') or request.data.get('email') or '').strip()
         password = request.data.get('password')
+        if not login or not password:
+            return Response(
+                {'error': {'code': 'validation_error', 'detail': 'Укажите логин и пароль'}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        username = login
+        if '@' in login:
+            user_by_email = User.objects.filter(email__iexact=login).first()
+            if user_by_email:
+                username = user_by_email.username
+
         user = authenticate(username=username, password=password)
         if user:
             refresh = RefreshToken.for_user(user)
@@ -70,12 +82,12 @@ class LoginView(APIView):
                     'first_name': user.first_name,
                     'last_name': user.last_name,
                 },
-                'profile': {
-                    'grade': user.profile.grade,
-                    'target_score': user.profile.target_score,
-                }
+                'profile': profile_payload(user),
             })
-        return Response({'error': 'Неверные учетные данные'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(
+            {'error': {'code': 'invalid_credentials', 'detail': 'Неверный email или пароль'}},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
 
 class ChangePasswordView(APIView):
