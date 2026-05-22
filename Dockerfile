@@ -16,7 +16,7 @@ RUN pip install uv
 
 COPY pyproject.toml ./
 
-RUN uv pip install --system -e .
+RUN uv pip install --system -e ".[ugc,notifications]"
 
 COPY . .
 
