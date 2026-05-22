@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import AuthPage from './pages/AuthPage.jsx';
 import CourseSelectionPage from './pages/CourseSelectionPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
-import RoadmapPlaceholder from './pages/RoadmapPlaceholder.jsx';
 import { getAccessToken } from './api/client.js';
 
 function resolveRoute() {
@@ -14,9 +13,6 @@ function resolveRoute() {
   }
   if (path === '/courses') {
     return hasToken ? 'courses' : 'auth';
-  }
-  if (path === '/roadmap') {
-    return hasToken ? 'roadmap' : 'auth';
   }
   if (path === '/profile') {
     return hasToken ? 'profile' : 'auth';
@@ -38,9 +34,6 @@ export default function App() {
 
   if (route === 'auth') {
     return <AuthPage />;
-  }
-  if (route === 'roadmap') {
-    return <RoadmapPlaceholder />;
   }
   if (route === 'profile') {
     return <ProfilePage />;

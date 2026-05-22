@@ -13,12 +13,11 @@ from progress.models import UserProgress
 class TestGetLessonWithProblems(TestCase):
     """Тесты для get_lesson_with_problems(lesson_id, user)"""
     def setUp(self):
-        # Создаем тестовые данные
+
         from courses.models import Subject, RoadmapNode, Lesson, Problem
         self.subject = Subject.objects.create(name="Тестовый предмет")
         self.user = User.objects.create_user(username="testuser", password="12345")
 
-        # Создаем корневой узел
         self.root_node = RoadmapNode.objects.create(
             subject=self.subject,
             title="Корневой узел",
@@ -28,14 +27,12 @@ class TestGetLessonWithProblems(TestCase):
             parent=None
         )
 
-        # Создаем урок
         self.lesson = Lesson.objects.create(
             node=self.root_node,
             title="Тестовый урок",
             order=0
         )
 
-        # Создаем задачу
         self.problem = Problem.objects.create(
             lesson=self.lesson,
             title="Тестовая задача",

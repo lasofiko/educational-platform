@@ -91,22 +91,12 @@ export default function AuthPage() {
             {isLogin
               ? 'Введите свои данные чтобы войти в аккаунт'
               : 'Создайте аккаунт чтобы начать'}
-          </p>
-
-          {serverOnline === false && (
-            <div className="auth-card__error" role="alert">
-              Django не запущен. В терминале:{' '}
-              <code>cd django_app</code>, затем{' '}
-              <code>uv run python manage.py runserver 127.0.0.1:8000</code>
-            </div>
-          )}
-
-          {error && (
+               {error && (
             <div className="auth-card__error" role="alert">
               {error}
             </div>
           )}
-
+          </p>
           {isLogin ? (
             <form className="auth-form" onSubmit={handleLogin} noValidate>
               <label className="field" htmlFor="login-username">
