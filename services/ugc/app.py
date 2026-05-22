@@ -13,9 +13,9 @@ def register_error_handlers(app):
         return jsonify({
             'error': {
                 'code': exc.code,
-                'detail': exc.message,
+                'detail': exc.detail,
             },
-        }), exc.status_code
+        }), exc.http_status
 
     @app.errorhandler(ValidationError)
     def handle_validation_error(exc):
@@ -33,10 +33,10 @@ def register_error_handlers(app):
             raise exc
         return jsonify({
             'error': {
-                'code': 'internal_error',
-                'detail': 'Внутренняя ошибка сервера',
+                'code': exc.code,
+                'detail': exc.detail,
             },
-        }), 500
+        }), exc.http_status
 
 
 def register_blueprints(app):
