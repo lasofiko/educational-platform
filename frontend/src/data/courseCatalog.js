@@ -1,4 +1,3 @@
-/** Каталог предметов на странице выбора курса */
 export const COURSE_CATALOG = [
   {
     slug: 'math',
