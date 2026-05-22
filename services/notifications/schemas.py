@@ -27,3 +27,8 @@ class NotificationOut(BaseModel):
     notification_type: str
     status: NotificationStatus
     created_at: datetime
+
+class NodeUnlockedEvent(BaseModel):
+    user_id: int = Field(ge=1)
+    node_id: int = Field(ge=1)
+    node_title: str = Field(min_length=1, max_length=200)
