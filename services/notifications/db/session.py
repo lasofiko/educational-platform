@@ -25,8 +25,9 @@ def get_engine(database_url=None):
     return _engine
 
 
-def get_session_factory(database_url=None):
+def get_session_factory(database_url=None) -> async_sessionmaker[AsyncSession]:
     get_engine(database_url)
+    assert _session_factory is not None
     return _session_factory
 
 
