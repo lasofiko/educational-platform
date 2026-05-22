@@ -1,7 +1,6 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
 from .models import Subject, RoadmapNode, Lesson, Problem, Quiz
 from .serializers import (
     SubjectSerializer,
@@ -25,9 +24,7 @@ class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='objects/(?P<target_type>[^/.]+)/(?P<target_id>[^/.]+)/exists', permission_classes=[permissions.AllowAny])
     def check_exists(self, request, target_type, target_id):
-        """Проверяет, существует ли lesson/subject)
-        Используется Flask UGC сервисом перед созданием отзыва
-        """
+
         from .models import Lesson, Subject
         if target_type not in ['lesson', 'subject']:
             return Response({'error': f'Неподдерживаемый тип: {target_type}. Допустимые: lesson, subject'},status=400)
@@ -50,7 +47,7 @@ class RoadmapViewSet(viewsets.GenericViewSet):
         nodes = roadmap_svc.get_tree(subject_id=subject_id)
         return Response(nodes)
 
-    # детальная информация о теме (данные сервиса, в т.ч. user_status)
+    # детальная информация о теме
     def retrieve(self, request, pk=None):
         node = roadmap_svc.get_node_with_status(pk, user=request.user)
         return Response(node)

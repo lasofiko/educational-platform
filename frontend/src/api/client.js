@@ -74,10 +74,8 @@ export async function apiRequest(path, options = {}) {
     });
   } catch {
     throw new Error(
-      `Не удалось связаться с ${url}. Запустите Django в папке django_app: ` +
-        'uv run python manage.py runserver 127.0.0.1:8000 ' +
-        '(или .\\run_dev.ps1). Если порт 8000 занят — используйте порт 8003 и обновите VITE_API_BASE в frontend/.env.development',
-    );
+      `Не удалось связаться с ${url}`
+      );
   }
 
   const data = await response.json().catch(() => ({}));
@@ -85,8 +83,7 @@ export async function apiRequest(path, options = {}) {
   if (!response.ok) {
     let message = formatApiError(data);
     if (response.status === 404) {
-      message =
-        `Сервер не нашёл адрес ${url}. Убедитесь, что Django запущен в папке django_app на порту 8000.`;
+      message = `Сервер не нашёл адрес ${url}. Проверьте, что Django запущен на порту 8003.`;
     }
     const error = new Error(message);
     error.status = response.status;

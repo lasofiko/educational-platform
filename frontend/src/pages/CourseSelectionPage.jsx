@@ -62,10 +62,6 @@ export default function CourseSelectionPage() {
 
   const openCourse = async (tile) => {
     const { subject, available, title } = tile;
-    if (!available || !subject?.id) {
-      setError(`Курс «${title}» скоро появится. Запустите seed в Django.`);
-      return;
-    }
 
     setLoadingId(subject.id);
     setError('');
@@ -82,7 +78,7 @@ export default function CourseSelectionPage() {
         setEnrolledIds((prev) => new Set([...prev, subject.id]));
         localStorage.setItem('selected_subject_id', String(subject.id));
         window.location.href = `/roadmap?subject=${subject.id}`;
-        return;
+      return;
       }
       setError(err.message);
     } finally {

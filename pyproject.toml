@@ -1,7 +1,8 @@
 [project]
 name = "educational-platform"
 version = "0.1.0"
-description = "Educational platform for exam preparation"
+description = "Educational platform for exam preparation (EGE)"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "django>=5.2",
@@ -15,13 +16,6 @@ dependencies = [
     "split-settings>=0.3",
     "requests>=2.32",
 ]
-
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-include = []
 
 [project.optional-dependencies]
 dev = [
@@ -39,6 +33,7 @@ ugc = [
     "PyJWT>=2.9",
     "sqlalchemy>=2.0",
     "requests>=2.32",
+    "python-dotenv>=1.0",
 ]
 notifications = [
     "fastapi>=0.115",
@@ -47,11 +42,35 @@ notifications = [
     "sqlalchemy[asyncio]>=2.0",
     "aiosqlite>=0.20",
     "httpx>=0.27",
+    "python-dotenv>=1.0",
 ]
+all = [
+    "educational-platform[dev,ugc,notifications]",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = []
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 pythonpath = ["django_app", "."]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
-testpaths = ["django_app/tests", "services/ugc/tests", "services/notifications/tests"]
+testpaths = [
+    "django_app/tests",
+    "services/ugc/tests",
+    "services/notifications/tests",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E501"]
