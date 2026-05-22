@@ -62,7 +62,6 @@ DJANGO_SETTINGS_MODULE = "config.settings"
 pythonpath = ["django_app", "."]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
-testpaths = ["django_app/tests", "services/ugc/tests", "services/notifications/tests"]
 testpaths = [
     "django_app/tests",
     "services/ugc/tests",
