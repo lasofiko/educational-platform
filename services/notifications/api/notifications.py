@@ -1,8 +1,9 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from fastapi.background import BackgroundTasks
 
 from services.notifications.schemas import NodeUnlockedEvent, NotificationCreate, NotificationOut
 from services.notifications.services.notification_svc import notification_service
+from services.notifications.dependencies.auth import get_current_user
 
 router = APIRouter(prefix='/notifications', tags=['notifications'])
 
@@ -26,3 +27,7 @@ async def handle_node_unlocked(payload: NodeUnlockedEvent, background_tasks: Bac
     
     return result
 
+@router.get('/me', response_model=list[NotificationOut], status_code=status.HTTP_200_OK)
+async def list_my_notifications(current_user: dict = Depends(get_current_user), limit: int = 20, offset: int = 0):
+    result = await notification_service.list_for_user(current_user["user_id"], limit, offset)
+    return result

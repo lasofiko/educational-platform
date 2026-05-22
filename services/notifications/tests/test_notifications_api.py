@@ -1,5 +1,18 @@
-import pytest
 from services.notifications.services.notification_svc import notification_service
+
+import jwt
+import pytest
+
+async def create_notification(client, user_id, title="test"):
+    return await client.post(
+        "/api/v1/notifications",
+        json={
+            "user_id": user_id,
+            "title": title,
+            "body": "test body",
+            "notification_type": "info",
+        },
+    )
 
 @pytest.mark.asyncio
 async def test_create_notification_success(client):
@@ -83,4 +96,67 @@ async def test_handle_node_unlocked_success(client):
     assert data['status'] == "pending"
     assert data['body'] == f"Вы открыли тему: «Алгебра»"
     assert data['notification_type'] == "node_unlocked"
+
+@pytest.mark.asyncio
+async def test_list_notifications_no_token(client):
+    response = await client.get(
+        '/api/v1/notifications/me'
+    )
+
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_list_notifications_bad_token(client, monkeypatch):
+    monkeypatch.setenv("JWT_SECRET", "very-very-secret-secret")
+    response = await client.get(
+        '/api/v1/notifications/me'
+    )
+
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_list_notifications_correct_user(client, monkeypatch):
+    monkeypatch.setenv("JWT_SECRET", "test-secret")
+    token = jwt.encode({"user_id": 1}, "test-secret", algorithm="HS256")
+
+    response = await client.get(
+        '/api/v1/notifications/me',
+        headers={"Authorization": f"Bearer {token}"}
+        )
+
+    notifications_num = len(response.json()) + 2
+
+    await create_notification(client, user_id=1)
+    await create_notification(client, user_id=1)
+    await create_notification(client, user_id=2)
+
+
+    response = await client.get(
+        '/api/v1/notifications/me',
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert all(item["user_id"] == 1 for item in data)
+    assert len(data) == notifications_num
+
+@pytest.mark.asyncio
+async def test_list_notifications_pagination(client, monkeypatch):
+    monkeypatch.setenv("JWT_SECRET", "test-secret")
+    token = jwt.encode({"user_id": 1}, "test-secret", algorithm="HS256")
+
+    for _ in range(5):
+        await create_notification(client, user_id=1)
     
+    response = await client.get(
+        '/api/v1/notifications/me?limit=2&offset=1',
+        headers={"Authorization": f"Bearer {token}"}
+        )
+
+    data = response.json()
+
+    assert len(data) == 2
