@@ -3,8 +3,14 @@ from ..models import Review, db
 class ReviewRepository:
     @staticmethod
     def create(user_id, target_type, target_id, rating, text, status='active'):
-        """Создать новый отзыв"""
-        review = Review(...)
+        review = Review(
+            user_id=user_id,
+            target_type=target_type,
+            target_id=target_id,
+            rating=rating,
+            text=text,
+            status=status,
+        )
         db.session.add(review)
         db.session.commit()
         return review

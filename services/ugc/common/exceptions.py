@@ -13,7 +13,7 @@ class TargetNotFound(UGCException):
 class AlreadyReviewed(UGCException):
     """Пользователь уже оставил отзыв"""
     def __init__(self, user_id, target_type, target_id):
-        super().__init__(detail=f'Пользователь {user_id} уже оставил отзыв на {target_type} {target_id}',code='already_reviewed',http_status=409)
+        super().__init__(detail=f'Пользователь {user_id} уже оставил отзыв на {target_type} {target_id}',code='duplicate_review',http_status=409)
 class UGCNotFound(UGCException):
     """Отзыв или комментарий не найден в БД"""
     def __init__(self, ugc_type, ugc_id):
@@ -27,3 +27,11 @@ class DjangoUnavailable(UGCException):
     """Django сервис недоступен (не отвечает на запросы)"""
     def __init__(self):
         super().__init__(detail='Сервис курсов временно недоступен',code='django_unavailable',http_status=503)
+
+class UnauthorizedError(UGCException):
+    def __init__(self, detail='Требуется авторизация'):
+        super().__init__(detail=detail, code='unauthorized', http_status=401)
+
+class ForbiddenError(UGCException):
+    def __init__(self, detail='Доступ запрещён'):
+        super().__init__(detail=detail, code='forbidden', http_status=403)
