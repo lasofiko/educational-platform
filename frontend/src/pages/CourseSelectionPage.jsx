@@ -62,10 +62,6 @@ export default function CourseSelectionPage() {
 
   const openCourse = async (tile) => {
     const { subject, available, title } = tile;
-    if (!available || !subject?.id) {
-      setError(`Курс «${title}» скоро появится. Запустите seed в Django.`);
-      return;
-    }
 
     setLoadingId(subject.id);
     setError('');
@@ -76,13 +72,13 @@ export default function CourseSelectionPage() {
       }
       localStorage.setItem('selected_subject_id', String(subject.id));
       localStorage.setItem('selected_subject_name', subject.name);
-      window.location.href = `/roadmap?subject=${subject.id}`;
+      window.location.href = '/courses';
     } catch (err) {
       if (err.status === 409) {
         setEnrolledIds((prev) => new Set([...prev, subject.id]));
         localStorage.setItem('selected_subject_id', String(subject.id));
-        window.location.href = `/roadmap?subject=${subject.id}`;
-        return;
+        window.location.href = '/courses';
+      return;
       }
       setError(err.message);
     } finally {

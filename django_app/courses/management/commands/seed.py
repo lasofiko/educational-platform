@@ -414,7 +414,7 @@ class Command(BaseCommand):
                         lesson, lesson_created = Lesson.objects.get_or_create(node=node,
                             defaults={
                                 "title": f"Урок: {node.title}",
-                                "description": "",
+                                "content": "",
                                 "order": 0
                             }
                         )

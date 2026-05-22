@@ -2,7 +2,6 @@ from rest_framework import serializers
 from .models import Subject, RoadmapNode, Lesson, Problem, Quiz, QuizQuestion
 from .services.ugc_client import get_ugc_summary
 
-# все поля модели
 class SubjectSerializer(serializers.ModelSerializer):
     ugc_summary = serializers.SerializerMethodField()
 

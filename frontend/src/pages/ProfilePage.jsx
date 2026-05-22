@@ -117,7 +117,7 @@ export default function ProfilePage() {
                   <ul className="profile-courses-list">
                     {enrollments.map((item) => (
                       <li key={item.id}>
-                        <a href={`/roadmap?subject=${item.subject}`}>
+                      <a href="/courses">
                           {subjectNames[item.subject] || `Курс #${item.subject}`}
                         </a>
                       </li>

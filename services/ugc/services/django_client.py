@@ -2,7 +2,7 @@ import os
 
 import requests
 
-from services.ugc.common.exceptions import TargetNotFoundError
+from services.ugc.common.exceptions import DjangoUnavailable, TargetNotFound
 
 
 class DjangoClient:
@@ -21,17 +21,14 @@ class DjangoClient:
         try:
             response = requests.get(url, timeout=self.timeout)
         except requests.RequestException as exc:
-            raise TargetNotFoundError(
-                message=f'Не удалось проверить объект: {exc}',
-            ) from exc
+            raise DjangoUnavailable() from exc
 
         if response.status_code == 404:
-            raise TargetNotFoundError()
+            raise TargetNotFound(target_type, target_id)
+
         if response.status_code != 200:
-            raise TargetNotFoundError(
-                message=f'Django вернул статус {response.status_code}',
-            )
+            raise TargetNotFound(target_type, target_id)
 
         payload = response.json()
-        if not payload.get('exists', True):
-            raise TargetNotFoundError()
+        if not payload.get('exists'):
+            raise TargetNotFound(target_type, target_id)
