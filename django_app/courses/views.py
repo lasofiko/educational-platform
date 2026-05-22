@@ -25,7 +25,6 @@ class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'], url_path='objects/(?P<target_type>[^/.]+)/(?P<target_id>[^/.]+)/exists', permission_classes=[permissions.AllowAny])
     def check_exists(self, request, target_type, target_id):
 
-        from .models import Lesson, Subject
         if target_type not in ['lesson', 'subject']:
             return Response({'error': f'Неподдерживаемый тип: {target_type}. Допустимые: lesson, subject'},status=400)
         if target_type == 'lesson':
