@@ -14,6 +14,7 @@ dependencies = [
     "pillow>=10.0",
     "split-settings>=0.3",
     "requests>=2.32",
+    "loguru>=0.7.3",
 ]
 
 [build-system]
