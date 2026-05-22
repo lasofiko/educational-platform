@@ -5,7 +5,7 @@ from courses.models import Problem, Quiz, QuizQuestion
 from courses.services.roadmap_svc import unlock_next_node
 from progress.models import UserProgress
 from progress.exceptions import ProblemNotFound, QuizFailed, QuizNotFound
-
+from progress.notifications_client import notify_node_unlocked
 
 class ScoringService:
     @staticmethod
@@ -65,6 +65,13 @@ class ScoringService:
 
         if percentage >= quiz.passing_score:
             unlocked = unlock_next_node(user, quiz.lesson.node.id, percentage)
+
+            if isinstance(unlocked, dict):
+                notify_node_unlocked(user.id, unlocked["id"], unlocked["title"])
+            elif isinstance(unlocked, list):
+                for node in unlocked:
+                    notify_node_unlocked(user.id, node["id"], node["title"])
+            
             return {
                 'percentage': round(percentage, 2),
                 'passed': True,
