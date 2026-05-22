@@ -4,7 +4,8 @@ services:
     build: .
     container_name: educational-platform-web
     command: >
-      sh -c "python manage.py migrate && 
+      sh -c "python manage.py migrate &&
+             python manage.py seed &&
              python manage.py runserver 0.0.0.0:8000"
     working_dir: /app/django_app
     volumes:
@@ -20,6 +21,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
       - DB_HOST=${DB_HOST:-db}
       - DB_PORT=${DB_PORT:-5432}
+      - JWT_SECRET=${JWT_SECRET:-django-insecure-dev-key-change-in-production}
+      - UGC_BASE_URL=http://ugc:8001
     depends_on:
       - db
     restart: unless-stopped
@@ -38,5 +41,58 @@ services:
       - "5432:5432"
     restart: unless-stopped
 
+  db-ugc:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ugc_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - ugc_postgres_data:/var/lib/postgresql/data
+
+  db-notifications:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: notifications_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - notifications_postgres_data:/var/lib/postgresql/data
+  ugc:
+    build: .
+    container_name: educational-platform-ugc
+    working_dir: /app
+    command: uv run python -m services.ugc
+    ports:
+      - "8001:8001"
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-django-insecure-dev-key-change-in-production}
+      - DJANGO_BASE_URL=http://web:8000
+      - UGC_DATABASE_URL=postgresql+psycopg2://postgres:postgres@db-ugc:5432/ugc_db
+    depends_on:
+      - db-ugc
+      - web
+    restart: unless-stopped
+
+  notifications:
+    build: .
+    container_name: educational-platform-notifications
+    working_dir: /app
+    command: uv run python -m services.notifications
+    ports:
+      - "8002:8002"
+    environment:
+      - NOTIFICATIONS_DATABASE_URL=postgresql+asyncpg://postgres:postgres@db-notifications:5432/notifications_db
+    depends_on:
+      - db-notifications
+    restart: unless-stopped
+
 volumes:
+  ugc_postgres_data:
+  notifications_postgres_data:
   postgres_data:
+

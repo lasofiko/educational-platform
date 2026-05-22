@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 from marshmallow import ValidationError
 
-from services.ugc.ugc_config import Config, TestConfig
+from services.ugc.config import Config, TestConfig
 from services.ugc.models import db
 from services.ugc.common.exceptions import UGCException
 from services.ugc.blueprints import reviews_bp, comments_bp, moderation_bp
@@ -13,9 +13,9 @@ def register_error_handlers(app):
         return jsonify({
             'error': {
                 'code': exc.code,
-                'detail': exc.message,
+                'detail': exc.detail,
             },
-        }), exc.status_code
+        }), exc.http_status
 
     @app.errorhandler(ValidationError)
     def handle_validation_error(exc):
@@ -33,10 +33,10 @@ def register_error_handlers(app):
             raise exc
         return jsonify({
             'error': {
-                'code': 'internal_error',
-                'detail': 'Внутренняя ошибка сервера',
+                'code': exc.code,
+                'detail': exc.detail,
             },
-        }), 500
+        }), exc.http_status
 
 
 def register_blueprints(app):

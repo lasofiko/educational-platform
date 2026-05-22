@@ -21,10 +21,7 @@ def _fetch_results(base_url, path, target_type, target_id, timeout):
 
 
 def get_ugc_summary(target_type, target_id, base_url=None, timeout=1.0):
-    """
-    Сводка UGC для detail Lesson/Subject.
-    При недоступности Flask возвращает нули и avg_rating=null.
-    """
+
     base = (base_url or os.environ.get('UGC_BASE_URL', 'http://localhost:8001')).rstrip('/')
     try:
         reviews = _fetch_results(

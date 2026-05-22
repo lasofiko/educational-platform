@@ -1,7 +1,6 @@
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
 from .models import Subject, RoadmapNode, Lesson, Problem, Quiz
 from .serializers import (
     SubjectSerializer,
@@ -17,17 +16,26 @@ from .services import roadmap_svc, lesson_svc, subject_svc
 from .services.ugc_client import get_ugc_summary
 
 class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
-
     permission_classes = [permissions.AllowAny]
     serializer_class = SubjectSerializer
 
     def get_queryset(self):
         return subject_svc.get_all_subjects()
 
+    @action(detail=False, methods=['get'], url_path='objects/(?P<target_type>[^/.]+)/(?P<target_id>[^/.]+)/exists', permission_classes=[permissions.AllowAny])
+    def check_exists(self, request, target_type, target_id):
+
+        from .models import Lesson, Subject
+        if target_type not in ['lesson', 'subject']:
+            return Response({'error': f'Неподдерживаемый тип: {target_type}. Допустимые: lesson, subject'},status=400)
+        if target_type == 'lesson':
+            exists = Lesson.objects.filter(id=target_id).exists()
+        else:
+            exists = Subject.objects.filter(id=target_id).exists()
+        return Response({'exists': exists})
+
 class RoadmapViewSet(viewsets.GenericViewSet):
-
     permission_classes = [permissions.AllowAny]
-
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return RoadmapNodeDetailSerializer
@@ -39,7 +47,7 @@ class RoadmapViewSet(viewsets.GenericViewSet):
         nodes = roadmap_svc.get_tree(subject_id=subject_id)
         return Response(nodes)
 
-    # детальная информация о теме (данные сервиса, в т.ч. user_status)
+    # детальная информация о теме
     def retrieve(self, request, pk=None):
         node = roadmap_svc.get_node_with_status(pk, user=request.user)
         return Response(node)
@@ -57,8 +65,8 @@ class RoadmapViewSet(viewsets.GenericViewSet):
             'completed_at': node['user_completed_at'],
         })
 
-class LessonViewSet(viewsets.GenericViewSet):
 
+class LessonViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.AllowAny]
     serializer_class = LessonSerializer
 
@@ -69,12 +77,11 @@ class LessonViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=['get'], url_path='by-node/(?P<node_id>[^/.]+)')
     def by_node(self, request, node_id=None):
-
         lessons = lesson_svc.get_lessons_for_node(node_id)
         return Response(lessons)
 
-class ProblemViewSet(viewsets.ReadOnlyModelViewSet):
 
+class ProblemViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
     filterset_class = ProblemFilter
 
@@ -86,8 +93,8 @@ class ProblemViewSet(viewsets.ReadOnlyModelViewSet):
             return ProblemDetailSerializer
         return ProblemSerializer
 
-class QuizViewSet(viewsets.ReadOnlyModelViewSet):
 
+class QuizViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
     serializer_class = QuizSerializer
 
