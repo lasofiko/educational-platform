@@ -54,4 +54,13 @@ jobs:
           DB_PASSWORD: postgres
           DB_HOST: localhost
           DB_PORT: 5432
+          JWT_SECRET: ci-test-secret-with-enough-entropy-32b
         run: uv run pytest django_app/tests/ services/ugc/tests/ services/notifications/tests/
+
+  compose-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet

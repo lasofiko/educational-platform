@@ -1,7 +1,7 @@
 import pytest
-from django_app.progress.services.enrollment_svc import enroll
-from django_app.progress.exceptions import AlreadyEnrolled
-from django_app.courses.models import Subject
+from progress.services.enrollment_svc import enroll
+from progress.exceptions import AlreadyEnrolled
+from courses.models import Subject
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
