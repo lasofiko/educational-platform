@@ -14,19 +14,20 @@ services:
       - "8000:8000"
     environment:
       - DEBUG=1
-      - SECRET_KEY=django-insecure-dev-key-change-in-production
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-dev-key-change-in-production}
       - ALLOWED_HOSTS=localhost,127.0.0.1,web
       - DB_NAME=${DB_NAME:-ege_platform}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
-      - DB_HOST=${DB_HOST:-db}
-      - DB_PORT=${DB_PORT:-5432}
+      - DB_HOST=db
+      - DB_PORT=5432
       - JWT_SECRET=${JWT_SECRET:-django-insecure-dev-key-change-in-production}
       - UGC_BASE_URL=http://ugc:8001
+      - NOTIFICATIONS_BASE_URL=http://notifications:8002
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
-
 
   db:
     image: postgres:15-alpine
@@ -39,34 +40,18 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-ege_platform}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
-  db-ugc:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: ugc_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
-    volumes:
-      - ugc_postgres_data:/var/lib/postgresql/data
-
-  db-notifications:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: notifications_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5434:5432"
-    volumes:
-      - notifications_postgres_data:/var/lib/postgresql/data
   ugc:
     build: .
     container_name: educational-platform-ugc
     working_dir: /app
-    command: uv run python -m services.ugc
+    command: python -m services.ugc
     ports:
       - "8001:8001"
     environment:
@@ -74,25 +59,65 @@ services:
       - DJANGO_BASE_URL=http://web:8000
       - UGC_DATABASE_URL=postgresql+psycopg2://postgres:postgres@db-ugc:5432/ugc_db
     depends_on:
-      - db-ugc
-      - web
+      db-ugc:
+        condition: service_healthy
+      web:
+        condition: service_started
+    restart: unless-stopped
+
+  db-ugc:
+    image: postgres:15-alpine
+    container_name: educational-platform-db-ugc
+    volumes:
+      - ugc_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=ugc_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ugc_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   notifications:
     build: .
     container_name: educational-platform-notifications
     working_dir: /app
-    command: uv run python -m services.notifications
+    command: python -m services.notifications
     ports:
       - "8002:8002"
     environment:
+      - JWT_SECRET=${JWT_SECRET:-django-insecure-dev-key-change-in-production}
+      - DJANGO_BASE_URL=http://web:8000
       - NOTIFICATIONS_DATABASE_URL=postgresql+asyncpg://postgres:postgres@db-notifications:5432/notifications_db
     depends_on:
-      - db-notifications
+      db-notifications:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db-notifications:
+    image: postgres:15-alpine
+    container_name: educational-platform-db-notifications
+    volumes:
+      - notifications_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=notifications_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notifications_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
 volumes:
+  postgres_data:
   ugc_postgres_data:
   notifications_postgres_data:
-  postgres_data:
-
