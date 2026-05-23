@@ -5,6 +5,7 @@ from courses.models import RoadmapNode, Subject
 from progress.models import UserProgress
 from courses.exceptions import NodeLocked, NodeNotFound
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class RoadmapService:
     """сервис для работы с деревом Roadmap и разблокировкой узлов"""
@@ -105,7 +106,6 @@ class RoadmapService:
             return None
         progress.status = 'complete'
         progress.score = int(score_percentage) if score_percentage else 100
-        from django.utils import timezone
         progress.completed_at = timezone.now()
         progress.save()
         unlocked_nodes = []

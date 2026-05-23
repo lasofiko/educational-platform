@@ -9,12 +9,12 @@ from courses.services.lesson_svc import (
 )
 from courses.exceptions import LessonNotFound, NodeLocked
 from progress.models import UserProgress
-#
+from courses.models import Subject, RoadmapNode, Lesson, Problem
+
 class TestGetLessonWithProblems(TestCase):
     """Тесты для get_lesson_with_problems(lesson_id, user)"""
     def setUp(self):
 
-        from courses.models import Subject, RoadmapNode, Lesson, Problem
         self.subject = Subject.objects.create(name="Тестовый предмет")
         self.user = User.objects.create_user(username="testuser", password="12345")
 
@@ -74,7 +74,6 @@ class TestGetLessonsForNode(TestCase):
     """Тесты для get_lessons_for_node(node_id)"""
 
     def setUp(self):
-        from courses.models import Subject, RoadmapNode, Lesson
 
         self.subject = Subject.objects.create(name="Тестовый предмет")
         self.node = RoadmapNode.objects.create(
@@ -96,7 +95,6 @@ class TestGetLessonsForNode(TestCase):
 
     def test_get_lessons_for_node_empty(self):
         """Возвращает пустой список, если у ноды нет уроков"""
-        from courses.models import RoadmapNode
 
         empty_node = RoadmapNode.objects.create(
             subject=self.subject,
@@ -113,7 +111,6 @@ class TestGetProblemWithAnswer(TestCase):
     """Тесты для get_problem_with_answer(problem_id, user)"""
 
     def setUp(self):
-        from courses.models import Subject, RoadmapNode, Lesson, Problem
 
         self.subject = Subject.objects.create(name="Тестовый предмет")
         self.user = User.objects.create_user(username="testuser2", password="12345")
