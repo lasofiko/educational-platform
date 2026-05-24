@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.background import BackgroundTasks
 
 from services.notifications.schemas import NodeUnlockedEvent, NotificationCreate, NotificationOut
@@ -9,7 +9,13 @@ router = APIRouter(prefix='/notifications', tags=['notifications'])
 
 
 @router.post('', response_model=NotificationOut, status_code=status.HTTP_201_CREATED)
-async def create_notification(payload: NotificationCreate, background_tasks: BackgroundTasks):
+async def create_notification(
+    payload: NotificationCreate,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user),
+):
+    if payload.user_id != current_user["user_id"]:
+        raise HTTPException(403, "Cannot create notifications for other users")
     result = await notification_service.create(payload)
     background_tasks.add_task(notification_service.dispatch, result.id)
     return result
