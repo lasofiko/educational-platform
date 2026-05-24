@@ -6,6 +6,12 @@ from services.notifications.db.session import get_engine, init_db
 from services.notifications.main import create_app
 
 TEST_DATABASE_URL = 'sqlite+aiosqlite:///:memory:'
+TEST_JWT_SECRET = 'test-secret-with-enough-entropy-32-bytes'
+
+
+@pytest.fixture(autouse=True)
+def jwt_secret(monkeypatch):
+    monkeypatch.setenv('JWT_SECRET', TEST_JWT_SECRET)
 
 
 @pytest.fixture
