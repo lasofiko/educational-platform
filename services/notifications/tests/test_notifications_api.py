@@ -1,7 +1,14 @@
 from services.notifications.services.notification_svc import notification_service
+from services.notifications.tests.conftest import TEST_JWT_SECRET
 
 import jwt
 import pytest
+
+
+def auth_headers(user_id):
+    token = jwt.encode({"user_id": user_id}, TEST_JWT_SECRET, algorithm="HS256")
+    return {"Authorization": f"Bearer {token}"}
+
 
 async def create_notification(client, user_id, title="test"):
     return await client.post(
@@ -12,7 +19,9 @@ async def create_notification(client, user_id, title="test"):
             "body": "test body",
             "notification_type": "info",
         },
+        headers=auth_headers(user_id),
     )
+
 
 @pytest.mark.asyncio
 async def test_create_notification_success(client):
@@ -24,6 +33,7 @@ async def test_create_notification_success(client):
             'body': 'Вы открыли новую тему в курсе.',
             'notification_type': 'node_unlocked',
         },
+        headers=auth_headers(1),
     )
     assert response.status_code == 201
     data = response.json()
@@ -45,6 +55,7 @@ async def test_create_notification_invalid_returns_422(client):
             'title': '',
             'body': '',
         },
+        headers=auth_headers(1),
     )
     assert response.status_code == 422
     detail = response.json()['detail']
@@ -56,12 +67,39 @@ async def test_create_notification_invalid_returns_422(client):
 
 
 @pytest.mark.asyncio
+async def test_create_notification_requires_auth(client):
+    response = await client.post(
+        '/api/v1/notifications',
+        json={
+            'user_id': 1,
+            'title': 't',
+            'body': 'b',
+        },
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_create_notification_user_mismatch_returns_403(client):
+    response = await client.post(
+        '/api/v1/notifications',
+        json={
+            'user_id': 2,
+            'title': 't',
+            'body': 'b',
+        },
+        headers=auth_headers(1),
+    )
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_create_notification_schedule_dispatch(client, monkeypatch):
     called_with = []
-    
+
     async def fake_dispatch(notification_id):
         called_with.append(notification_id)
-        
+
     monkeypatch.setattr(notification_service, "dispatch", fake_dispatch)
 
     response = await client.post(
@@ -72,10 +110,12 @@ async def test_create_notification_schedule_dispatch(client, monkeypatch):
             'body': 'Вы открыли новую тему в курсе.',
             'notification_type': 'node_unlocked',
         },
+        headers=auth_headers(1),
     )
 
     assert len(called_with) == 1
     assert response.json()["id"] == called_with[0]
+
 
 @pytest.mark.asyncio
 async def test_handle_node_unlocked_success(client):
@@ -97,32 +137,28 @@ async def test_handle_node_unlocked_success(client):
     assert data['body'] == f"Вы открыли тему: «Алгебра»"
     assert data['notification_type'] == "node_unlocked"
 
+
 @pytest.mark.asyncio
 async def test_list_notifications_no_token(client):
-    response = await client.get(
-        '/api/v1/notifications/me'
-    )
-
+    response = await client.get('/api/v1/notifications/me')
     assert response.status_code == 401
 
-@pytest.mark.asyncio
-async def test_list_notifications_bad_token(client, monkeypatch):
-    monkeypatch.setenv("JWT_SECRET", "very-very-secret-secret")
-    response = await client.get(
-        '/api/v1/notifications/me'
-    )
-
-    assert response.status_code == 401
 
 @pytest.mark.asyncio
-async def test_list_notifications_correct_user(client, monkeypatch):
-    monkeypatch.setenv("JWT_SECRET", "test-secret")
-    token = jwt.encode({"user_id": 1}, "test-secret", algorithm="HS256")
-
+async def test_list_notifications_bad_token(client):
     response = await client.get(
         '/api/v1/notifications/me',
-        headers={"Authorization": f"Bearer {token}"}
-        )
+        headers={"Authorization": "Bearer not.a.real.jwt"},
+    )
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_list_notifications_correct_user(client):
+    response = await client.get(
+        '/api/v1/notifications/me',
+        headers=auth_headers(1),
+    )
 
     notifications_num = len(response.json()) + 2
 
@@ -130,12 +166,10 @@ async def test_list_notifications_correct_user(client, monkeypatch):
     await create_notification(client, user_id=1)
     await create_notification(client, user_id=2)
 
-
     response = await client.get(
         '/api/v1/notifications/me',
-        headers={"Authorization": f"Bearer {token}"}
+        headers=auth_headers(1),
     )
-
 
     assert response.status_code == 200
 
@@ -144,18 +178,16 @@ async def test_list_notifications_correct_user(client, monkeypatch):
     assert all(item["user_id"] == 1 for item in data)
     assert len(data) == notifications_num
 
-@pytest.mark.asyncio
-async def test_list_notifications_pagination(client, monkeypatch):
-    monkeypatch.setenv("JWT_SECRET", "test-secret")
-    token = jwt.encode({"user_id": 1}, "test-secret", algorithm="HS256")
 
+@pytest.mark.asyncio
+async def test_list_notifications_pagination(client):
     for _ in range(5):
         await create_notification(client, user_id=1)
-    
+
     response = await client.get(
         '/api/v1/notifications/me?limit=2&offset=1',
-        headers={"Authorization": f"Bearer {token}"}
-        )
+        headers=auth_headers(1),
+    )
 
     data = response.json()
 
