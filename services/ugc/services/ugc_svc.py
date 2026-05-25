@@ -46,6 +46,7 @@ def moderate(
     moderator_id: int,
     review_repo,
     comment_repo,
+
 ):
     """Модерация отзыва/комментария."""
     valid_statuses = {"active", "hidden", "pending"}
