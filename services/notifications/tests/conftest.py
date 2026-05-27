@@ -5,7 +5,7 @@ from httpx import ASGITransport, AsyncClient
 from services.notifications.db.session import get_engine, init_db
 from services.notifications.main import create_app
 
-TEST_DATABASE_URL = 'sqlite+aiosqlite:///:memory:'
+TEST_DATABASE_URL = 'postgresql+asyncpg://postgres:postgres@127.0.0.1:5434/notifications_test_db'
 
 
 @pytest.fixture

@@ -24,7 +24,7 @@
 - Django 5 + Django REST Framework + JWT
 - Flask (UGC), FastAPI (notifications)
 - React 19 + Vite
-- PostgreSQL (Docker / CI) или SQLite (локальная разработка без `DB_NAME`)
+- PostgreSQL (Docker / CI) 
 
 ---
 
@@ -65,7 +65,7 @@ uv sync --extra dev --extra ugc --extra notifications
 
 ### 2. Бэкенд (Django)
 
-**Не задавайте** переменные `DB_NAME`, `DB_HOST` и т.д. — тогда используется **SQLite** (`django_app/db.sqlite3`).
+Для локальной разработки используется **PostgreSQL**. Перед запуском поднимите базы данных через Docker Compose и задайте переменные окружения из `.env.example`.
 
 ```powershell
 cd django_app
@@ -109,7 +109,7 @@ VITE_API_BASE=http://127.0.0.1:8003
 # из корня, после uv sync --extra ugc
 $env:JWT_SECRET="django-insecure-dev-key-change-in-production"
 $env:DJANGO_BASE_URL="http://127.0.0.1:8003"
-$env:UGC_DATABASE_URL="sqlite:///ugc_local.db"
+$env:UGC_DATABASE_URL="postgresql+psycopg2://postgres:postgres@127.0.0.1:5433/ugc_db"
 uv run python -m services.ugc
 ```
 
@@ -131,8 +131,6 @@ uv run python -m services.notifications
 ---
 
 ## Тесты
-
-### Локально на SQLite
 
 Сбросьте переменные БД в текущей сессии PowerShell:
 
