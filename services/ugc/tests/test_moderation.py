@@ -1,10 +1,8 @@
 import responses
 
-from services.ugc.tests.conftest import django_exists_url
-
 
 @responses.activate
-def test_moderate_review_success(client, auth_headers):
+def test_moderate_review_success(client, auth_headers, django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('lesson', 10),
@@ -33,7 +31,7 @@ def test_moderate_review_success(client, auth_headers):
 
 
 @responses.activate
-def test_moderate_non_staff_returns_403(client, auth_headers):
+def test_moderate_non_staff_returns_403(client, auth_headers, django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('lesson', 11),

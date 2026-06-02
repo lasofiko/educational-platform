@@ -1,7 +1,5 @@
 import responses
 
-from services.ugc.tests.conftest import django_exists_url
-
 
 def _comment_payload(**overrides):
     payload = {
@@ -14,7 +12,7 @@ def _comment_payload(**overrides):
 
 
 @responses.activate
-def test_post_comment_success(client, auth_headers):
+def test_post_comment_success(client, auth_headers, django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('lesson', 1),

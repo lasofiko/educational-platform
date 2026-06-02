@@ -46,5 +46,8 @@ def auth_headers():
     return _headers
 
 
-def django_exists_url(target_type, target_id):
-    return f'{DJANGO_TEST_BASE}/api/v1/courses/objects/{target_type}/{target_id}/exists/'
+@pytest.fixture
+def django_exists_url():
+    def _builder(target_type, target_id):
+        return f'{DJANGO_TEST_BASE}/api/v1/courses/objects/{target_type}/{target_id}/exists/'
+    return _builder

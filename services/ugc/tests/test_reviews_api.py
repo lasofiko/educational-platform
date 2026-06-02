@@ -1,6 +1,5 @@
 import responses
 
-from services.ugc.tests.conftest import django_exists_url
 from services.ugc.models import Review, db
 
 
@@ -16,7 +15,7 @@ def _review_payload(**overrides):
 
 
 @responses.activate
-def test_post_review_success(client, auth_headers):
+def test_post_review_success(client, auth_headers,django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('lesson', 1),
@@ -36,7 +35,7 @@ def test_post_review_success(client, auth_headers):
 
 
 @responses.activate
-def test_post_review_duplicate_returns_409(client, auth_headers):
+def test_post_review_duplicate_returns_409(client, auth_headers, django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('lesson', 1),
@@ -74,7 +73,7 @@ def test_post_review_invalid_target_type_returns_422(client, auth_headers):
 
 
 @responses.activate
-def test_post_review_target_not_found_returns_404(client, auth_headers):
+def test_post_review_target_not_found_returns_404(client, auth_headers, django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('lesson', 999),
@@ -90,7 +89,7 @@ def test_post_review_target_not_found_returns_404(client, auth_headers):
 
 
 @responses.activate
-def test_post_review_without_token_returns_401(client):
+def test_post_review_without_token_returns_401(client, django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('lesson', 1),
@@ -102,7 +101,7 @@ def test_post_review_without_token_returns_401(client):
 
 
 @responses.activate
-def test_get_reviews_excludes_hidden(client, auth_headers, app):
+def test_get_reviews_excludes_hidden(client, auth_headers, app,django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('lesson', 2),
@@ -129,7 +128,7 @@ def test_get_reviews_excludes_hidden(client, auth_headers, app):
 
 
 @responses.activate
-def test_get_reviews_returns_visible_items(client, auth_headers):
+def test_get_reviews_returns_visible_items(client, auth_headers, django_exists_url):
     responses.add(
         responses.GET,
         django_exists_url('subject', 3),
