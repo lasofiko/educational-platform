@@ -38,6 +38,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev --extra ugc --extra notifications
 
+      - name: Create logical databases for microservices
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d postgres -c "CREATE DATABASE ugc_db;"
+          psql -h localhost -U postgres -d postgres -c "CREATE DATABASE notifications_db;"
+
       - name: Run migrations
         env:
           DB_NAME: test_db
@@ -55,6 +62,8 @@ jobs:
           DB_HOST: localhost
           DB_PORT: 5432
           JWT_SECRET: ci-test-secret-with-enough-entropy-32b
+          UGC_DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/ugc_db
+          NOTIFICATIONS_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/notifications_db
         run: uv run pytest django_app/tests/ services/ugc/tests/ services/notifications/tests/
 
   compose-validate:
