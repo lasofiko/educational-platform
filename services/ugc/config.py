@@ -12,4 +12,7 @@ class Config:
 
 class TestConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://postgres:postgres@127.0.0.1:5433/ugc_db'
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'UGC_DATABASE_URL',
+        'postgresql+psycopg2://postgres:postgres@127.0.0.1:5433/ugc_db',
+    )
